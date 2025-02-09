@@ -1,0 +1,3 @@
+/mnt/c/Users/lev-m/теоризируем параллелизм/задание 1/cmake/CMakeFiles/task1.dir
+/mnt/c/Users/lev-m/теоризируем параллелизм/задание 1/cmake/CMakeFiles/edit_cache.dir
+/mnt/c/Users/lev-m/теоризируем параллелизм/задание 1/cmake/CMakeFiles/rebuild_cache.dir
