@@ -89,6 +89,7 @@ vector<double> solve1(mat& A, vec& b, double t, double ksi,int threads) {
 		norm1 = 0;
 		#pragma omp parallel for num_threads(threads)
 		for (int i = 0; i < SIZE; i++)
+			#pragma omp atomic
 			norm1 += x1[i] * x1[i];
 		// условие остановки
 		if (norm1 / norm2 < ksi) {
@@ -125,8 +126,10 @@ vector<double> solve2(mat& A, vec& b, double t, double ksi,int threads) {
 	#pragma omp parallel num_threads(threads)
 	{
 		while (!stop) {
-			cnt++;
-			if (cnt % 1000 == 0)cout << cnt << "\n";
+			if (omp_get_thread_num() == 0) {
+				cnt++;
+				if (cnt % 1000 == 0)cout << cnt << "\n";
+			}
 			// Axn -> x1
 			#pragma omp for
 			for (int i = 0; i < SIZE;i++) {
@@ -139,9 +142,12 @@ vector<double> solve2(mat& A, vec& b, double t, double ksi,int threads) {
 			for (int i = 0; i < SIZE; i++)
 				x1[i] -= b[i];
 			// ||Axn - b|| = ||x1|| -> norm1
-			norm1 = 0;
+
+			if(omp_get_thread_num() == 0)norm1 = 0;
+			#pragma omp barrier
 			#pragma omp for
 			for (int i = 0; i < SIZE; i++)
+				#pragma omp atomic
 				norm1 += x1[i] * x1[i];
 			// условие остановки
 			if (norm1 / norm2 < ksi) { stop = 1; continue; }
