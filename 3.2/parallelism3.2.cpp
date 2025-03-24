@@ -14,7 +14,7 @@ using namespace std;
 
 
 template<typename T>
-struct task{ function <T()> func; size_t id; };
+struct task { function <T()> func; size_t id; };
 
 template<typename T>
 class server {
@@ -22,9 +22,9 @@ private:
 	mutex server_mutex;
 	map<size_t, T> results;
 	queue<task<T>> tasks;
-	bool shutdown{true};
+	bool shutdown{ true };
 	size_t id;
-	static void process(queue<task<T>>& tasks, map<size_t, T>& results, bool& shutdown,mutex& server_mutex) {
+	static void process(queue<task<T>>& tasks, map<size_t, T>& results, bool& shutdown, mutex& server_mutex) {
 		task<T> riba;
 		while (1) {
 			this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -43,11 +43,11 @@ public:
 		server_mutex.lock();
 		if (!shutdown) { server_mutex.unlock(); return; }
 		shutdown = false; id = 0;
-		thread th(this->process,ref(tasks),ref(results),ref(shutdown),ref(server_mutex));
+		thread th(this->process, ref(tasks), ref(results), ref(shutdown), ref(server_mutex));
 		th.detach();
 		server_mutex.unlock();
 	}
-	void stop() { 
+	void stop() {
 		server_mutex.lock();
 		shutdown = true;
 		server_mutex.unlock();
@@ -56,9 +56,9 @@ public:
 		server_mutex.lock();
 		tasks.push({ what, id++ });
 		server_mutex.unlock();
-		return id - 1; 
+		return id - 1;
 	}
-	T request_result(size_t id_res) { 
+	T request_result(size_t id_res) {
 		while (1) {
 			server_mutex.lock();
 			if (results.count(id_res)) { server_mutex.unlock(); break; }
@@ -66,10 +66,10 @@ public:
 			this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		server_mutex.lock();
-		T ret = results[id_res]; 
-		results.erase(id_res); 
+		T ret = results[id_res];
+		results.erase(id_res);
 		server_mutex.unlock();
-		return ret; 
+		return ret;
 	}
 };
 
@@ -86,11 +86,11 @@ T fun_sqrt(T arg) {
 
 template<typename T>
 T fun_pow(T arg1, T arg2) {
-	return pow(arg1,arg2);
+	return pow(arg1, arg2);
 }
 
 template<typename T>
-void client1(T (f)(T), server<T>& kuda,string filename) {
+void client1(T(f)(T), server<T>& kuda, string filename) {
 	ofstream file;
 	file.open(filename);
 	int N = rand() % (10000 - 5) + 5;
@@ -116,14 +116,14 @@ void client2(T(f)(T), server<T>& kuda, string filename) {
 }
 
 template<typename T>
-void client3(T(f)(T,T), server<T>& kuda, string filename) {
+void client3(T(f)(T, T), server<T>& kuda, string filename) {
 	ofstream file;
 	file.open(filename);
 	int N = rand() % (10000 - 5) + 5;
 	for (int i = 0; i < N; i++) {
-		double num1 = rand() % 1000;
-		double num2 = rand() % 100;
-		size_t ticket = kuda.add_task(bind(f, num1,num2));
+		double num1 = rand() % 10;
+		double num2 = rand() % 4;
+		size_t ticket = kuda.add_task(bind(f, num1, num2));
 		file << num1 << " " << num2 << " " << kuda.request_result(ticket) << "\n";
 	}
 	file.close();
@@ -138,4 +138,5 @@ int main() {
 	th1.join();
 	th2.join();
 	th3.join();
+	riba.stop();
 }
