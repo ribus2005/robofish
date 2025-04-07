@@ -8,42 +8,50 @@
 #include <fstream>
 #include <random>
 #include <string>
+#include <condition_variable>
+#include <future>
 
 using namespace std;
-
+std::condition_variable cv;
 
 
 template<typename T>
-struct task { function <T()> func; size_t id; };
+struct task { packaged_task <T()> func; size_t id; };
+
 
 template<typename T>
 class server {
 private:
 	mutex server_mutex;
-	map<size_t, T> results;
+	map<size_t, future<T>> results;
 	queue<task<T>> tasks;
-	bool shutdown{ true };
+	bool shutdown;
+	bool has_work;
 	size_t id;
-	static void process(queue<task<T>>& tasks, map<size_t, T>& results, bool& shutdown, mutex& server_mutex) {
+	static void process(queue<task<T>>& tasks, map<size_t, future<T>>& results, mutex& server_mutex,bool &has_work, bool &shutdown) {
 		task<T> riba;
+		unique_lock<std::mutex> lock(server_mutex);
+		cout << "server started\n";
 		while (1) {
-			this_thread::sleep_for(std::chrono::milliseconds(5));
-			server_mutex.lock();
-			if (shutdown) { server_mutex.unlock(); break; }
-			if (tasks.empty()) { server_mutex.unlock(); continue; }
-			riba = move(tasks.front());
-			results.insert({ riba.id, riba.func() });
-			tasks.pop();
-			server_mutex.unlock();
+			cout << "waiting...\n";
+			cv.wait(lock, [&has_work, &shutdown]() { return has_work || shutdown; });
+			if (shutdown) { break; }
+			cout << "za rabotu!\n";
+			while (!tasks.empty()) {
+				riba = move(tasks.front());
+				riba.func();
+				tasks.pop();
+			}
+			has_work = false;
+			cout << "ya vse\n";
 		}
 	}
 public:
 	server() {  }
 	void start() {
 		server_mutex.lock();
-		if (!shutdown) { server_mutex.unlock(); return; }
-		shutdown = false; id = 0;
-		thread th(this->process, ref(tasks), ref(results), ref(shutdown), ref(server_mutex));
+		shutdown = false; id = 0; has_work = false;
+		thread th(this->process, ref(tasks), ref(results), ref(server_mutex), ref(has_work), ref(shutdown));
 		th.detach();
 		server_mutex.unlock();
 	}
@@ -51,25 +59,32 @@ public:
 		server_mutex.lock();
 		shutdown = true;
 		server_mutex.unlock();
+		cv.notify_all();
 	}
 	size_t add_task(function <T()> what) {
+		packaged_task <T()> taska(what);
+		future<T> result = taska.get_future();
 		server_mutex.lock();
-		tasks.push({ what, id++ });
+		tasks.push({ move(taska), id });
+		results.insert({ id, move(result) });
+		id++;
+		has_work = true;
 		server_mutex.unlock();
+		cv.notify_all();
 		return id - 1;
 	}
 	T request_result(size_t id_res) {
-		while (1) {
-			server_mutex.lock();
-			if (results.count(id_res)) { server_mutex.unlock(); break; }
-			server_mutex.unlock();
-			this_thread::sleep_for(std::chrono::milliseconds(10));
+		cout << "waiting for result\n";
+		future<T> future;
+		{
+			lock_guard<mutex> lock(server_mutex); 
+			auto it = results.find(id_res);
+			if (it == results.end()) throw runtime_error("Invalid task ID");
+			future = move(it->second);
+			results.erase(it);
 		}
-		server_mutex.lock();
-		T ret = results[id_res];
-		results.erase(id_res);
-		server_mutex.unlock();
-		return ret;
+		cout << "result found\n";
+		return future.get();  
 	}
 };
 
@@ -136,7 +151,10 @@ int main() {
 	thread th2(client2<double>, fun_sqrt<double>, ref(riba), "client2.txt"s);
 	thread th3(client3<double>, fun_pow<double>, ref(riba), "client3.txt"s);
 	th1.join();
+	cout << "thread 1 finished\n";
 	th2.join();
+	cout << "thread 2 finished\n";
 	th3.join();
+	cout << "thread 3 finished\n";
 	riba.stop();
 }
