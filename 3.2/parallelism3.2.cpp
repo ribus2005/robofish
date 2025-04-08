@@ -37,12 +37,12 @@ private:
 			cv.wait(lock, [&has_work, &shutdown]() { return has_work || shutdown; });
 			if (shutdown) { break; }
 			cout << "za rabotu!\n";
-			while (!tasks.empty()) {
-				riba = move(tasks.front());
-				riba.func();
-				tasks.pop();
-			}
-			has_work = false;
+			riba = move(tasks.front());
+			tasks.pop();
+			if (tasks.empty())has_work = false;
+			lock.unlock();
+			riba.func();
+			lock.lock();
 			cout << "ya vse\n";
 		}
 	}
@@ -58,8 +58,8 @@ public:
 	void stop() {
 		server_mutex.lock();
 		shutdown = true;
-		server_mutex.unlock();
 		cv.notify_all();
+		server_mutex.unlock();
 	}
 	size_t add_task(function <T()> what) {
 		packaged_task <T()> taska(what);
@@ -69,8 +69,8 @@ public:
 		results.insert({ id, move(result) });
 		id++;
 		has_work = true;
-		server_mutex.unlock();
 		cv.notify_all();
+		server_mutex.unlock();
 		return id - 1;
 	}
 	T request_result(size_t id_res) {
