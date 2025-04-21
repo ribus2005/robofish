@@ -50,13 +50,16 @@ class SensorCam(Sensor):
                 self.ok = False
             if ret:
                 frame = cv2.resize(frame,(self.resolution[0],self.resolution[1]),interpolation = cv2.INTER_LINEAR)
-                self.frame_queue.queue[0] = frame.copy()
+                self.frame_queue.get()
+                self.frame_queue.put(frame.copy())
             else:
                 self.ok = False
                 self.logger.error(f'unable to read feed from {self.name}')
                 break
                 
     def get(self):
+        while self.frame_queue.empty():
+            pass
         return (self.ok, self.frame_queue.queue[0].copy())
         
     def __del__(self):
