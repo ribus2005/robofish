@@ -36,6 +36,7 @@ class SensorCam(Sensor):
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.shutdown = False
+        self.lock = threading.Lock()
         self.frame_queue = Queue(maxsize=1)
         self.frame_queue.put(np.zeros((resolution[0],resolution[1],3)))
         self.thread = threading.Thread(target=self.run)
@@ -50,7 +51,9 @@ class SensorCam(Sensor):
                 self.ok = False
             if ret:
                 frame = cv2.resize(frame,(self.resolution[0],self.resolution[1]),interpolation = cv2.INTER_LINEAR)
+                self.lock.acquire()
                 self.frame_queue.get()
+                self.lock.release()
                 self.frame_queue.put(frame.copy())
             else:
                 self.ok = False
@@ -58,9 +61,10 @@ class SensorCam(Sensor):
                 break
                 
     def get(self):
-        while self.frame_queue.empty():
-            pass
-        return (self.ok, self.frame_queue.queue[0].copy())
+        self.lock.acquire()
+        ret = (self.ok, self.frame_queue.queue[0].copy())
+        self.lock.release()
+        return ret
         
     def __del__(self):
         self.shutdown = True
