@@ -53,8 +53,8 @@ class SensorCam(Sensor):
                 frame = cv2.resize(frame,(self.resolution[0],self.resolution[1]),interpolation = cv2.INTER_LINEAR)
                 self.lock.acquire()
                 self.frame_queue.get()
-                self.lock.release()
                 self.frame_queue.put(frame.copy())
+                self.lock.release()
             else:
                 self.ok = False
                 self.logger.error(f'unable to read feed from {self.name}')
