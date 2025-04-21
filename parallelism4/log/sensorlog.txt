@@ -1,6 +1,6 @@
-sensorlogger 2025-04-21 16:49:42,604 INFO starting SensorX module number 0
-sensorlogger 2025-04-21 16:49:42,605 INFO starting SensorX module number 1
-sensorlogger 2025-04-21 16:49:42,605 INFO starting SensorX module number 2
-sensorlogger 2025-04-21 16:50:03,788 INFO finished work for sensor 0
-sensorlogger 2025-04-21 16:50:03,810 INFO finished work for sensor 1
-sensorlogger 2025-04-21 16:50:04,619 INFO finished work for sensor 2
+sensorlogger 2025-04-21 17:24:17,496 INFO starting SensorX module number 0
+sensorlogger 2025-04-21 17:24:17,496 INFO starting SensorX module number 1
+sensorlogger 2025-04-21 17:24:17,497 INFO starting SensorX module number 2
+sensorlogger 2025-04-21 17:24:42,788 INFO finished work for sensor 0
+sensorlogger 2025-04-21 17:24:42,823 INFO finished work for sensor 1
+sensorlogger 2025-04-21 17:24:43,509 INFO finished work for sensor 2

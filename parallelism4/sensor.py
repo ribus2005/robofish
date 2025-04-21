@@ -2,7 +2,7 @@ import time
 import logging
 import argparse
 
-import queue
+from queue import Queue
 import threading
 import cv2
 import numpy as np
@@ -23,7 +23,6 @@ class SensorCam(Sensor):
         camhandler.setFormatter(formatter)
         self.logger.addHandler(camhandler)
         self.logger.info(f"starting SensorCam module for {name} with {resolution}")
-        self.most_recent_frame = np.zeros((resolution[0],resolution[1],3))
         self.resolution = resolution
         self.name = name
         self.ok = True
@@ -37,6 +36,8 @@ class SensorCam(Sensor):
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.shutdown = False
+        self.frame_queue = Queue(maxsize=1)
+        self.frame_queue.put(np.zeros((resolution[0],resolution[1],3)))
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
     def run(self):
@@ -49,14 +50,14 @@ class SensorCam(Sensor):
                 self.ok = False
             if ret:
                 frame = cv2.resize(frame,(self.resolution[0],self.resolution[1]),interpolation = cv2.INTER_LINEAR)
-                self.most_recent_frame = frame
+                self.frame_queue.queue[0] = frame.copy()
             else:
                 self.ok = False
                 self.logger.error(f'unable to read feed from {self.name}')
                 break
                 
     def get(self):
-        return (self.ok, self.most_recent_frame)
+        return (self.ok, self.frame_queue.queue[0].copy())
         
     def __del__(self):
         self.shutdown = True
