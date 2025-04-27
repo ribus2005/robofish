@@ -1,2 +1,1 @@
-camlogger 2025-04-20 18:47:40,504 INFO starting SensorCam module for 0 with (1000, 500)
-camlogger 2025-04-20 18:47:47,294 INFO finished reading from camera 0
+camlogger 2025-04-21 17:38:32,188 INFO starting SensorCam module for 0 with (500, 500)

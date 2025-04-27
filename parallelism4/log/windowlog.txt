@@ -1,2 +1,1 @@
-windowlogger 2025-04-20 18:47:40,711 INFO starting WindowImage module with frequency 30
-windowlogger 2025-04-20 18:47:46,971 INFO finished showing for window 0
+windowlogger 2025-04-21 17:38:45,009 INFO starting WindowImage module with frequency 20

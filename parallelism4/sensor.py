@@ -2,7 +2,7 @@ import time
 import logging
 import argparse
 
-import queue
+from queue import Queue
 import threading
 import cv2
 import numpy as np
@@ -23,11 +23,9 @@ class SensorCam(Sensor):
         camhandler.setFormatter(formatter)
         self.logger.addHandler(camhandler)
         self.logger.info(f"starting SensorCam module for {name} with {resolution}")
-        self.most_recent_frame = np.zeros((resolution[0],resolution[1],3))
         self.resolution = resolution
         self.name = name
         self.ok = True
-        self.lock = threading.Lock()
         if resolution[0] <= 1 or resolution[1] <= 1:
             self.ok = False 
             self.logger.critical(f"incorrect resolution {resolution} for camera {self.name}")
@@ -38,41 +36,38 @@ class SensorCam(Sensor):
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.shutdown = False
+        self.lock = threading.Lock()
+        self.frame_queue = Queue(maxsize=1)
+        self.frame_queue.put(np.zeros((resolution[0],resolution[1],3)))
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
     def run(self):
         while True:
-            #self.lock.acquire()
             if self.shutdown or not self.ok:
-                #self.lock.release()
                 break
-            #self.lock.release()
             try: 
                 ret, frame = self.cam.read()
             except Exception:
                 self.ok = False
             if ret:
                 frame = cv2.resize(frame,(self.resolution[0],self.resolution[1]),interpolation = cv2.INTER_LINEAR)
-                #self.lock.acquire()
-                self.most_recent_frame = frame
-                #self.lock.release()
+                self.lock.acquire()
+                self.frame_queue.get()
+                self.frame_queue.put(frame.copy())
+                self.lock.release()
             else:
-                #self.lock.acquire()
                 self.ok = False
-                #self.lock.release()
                 self.logger.error(f'unable to read feed from {self.name}')
                 break
                 
     def get(self):
-        #self.lock.acquire()
-        ret = (self.ok, self.most_recent_frame)
-        #self.lock.release()
-        return ret  
+        self.lock.acquire()
+        ret = (self.ok, self.frame_queue.queue[0].copy())
+        self.lock.release()
+        return ret
         
     def __del__(self):
-        #self.lock.acquire()
         self.shutdown = True
-        #self.lock.release()
         self.thread.join()
         self.cam.release()
         self.logger.info(f"finished reading from camera {self.name}")
@@ -82,6 +77,17 @@ sensorhandler = logging.FileHandler("log/sensorlog.txt", mode='w')
 sensorhandler.setFormatter(formatter)
 
 class SensorX(Sensor):
+    '''Sensor X'''
+    def __init__(self, delay: float):
+        self._delay = delay 
+        self._data = 0
+    
+    def get(self) -> int:
+        time.sleep(self._delay)
+        self._data += 1
+        return self._data
+
+class CringeX():
     
     def __init__(self,frequency):
         global sensorhandler
@@ -94,41 +100,28 @@ class SensorX(Sensor):
         self.logger.info(f"starting SensorX module number {self.number}")
         self.ok = True
         self.shutdown = False
-        self.lock = threading.Lock()
         if frequency <= 0: 
             self.logger.critical(f"incorrect frequency {frequency} for SensorX {self.number}")
             self.ok = False
         else:
             self.delay = 1.0 / frequency
-        self.last_time = time.time()
+            self.sensor = SensorX(self.delay)
         self.value = 0
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
     def run(self):
         while True:
-            #self.lock.acquire()
             if self.shutdown or not self.ok:
-                #self.lock.release()
                 break
-            if self.delay - (time.time() - self.last_time) > 0: 
-                time.sleep(self.delay - (time.time() - self.last_time))
-            self.last_time = time.time()
-            self.value += 1
-            
-            #self.lock.release()
+            self.value = self.sensor.get()
            
 
     def get(self):
-        #self.lock.acquire()
-        ret = self.value
-        #self.lock.release()
-        return ret
+        return self.value
 
     def __del__(self):
-        self.lock.acquire()
         self.shutdown = True
-        self.lock.release()
         self.thread.join()
         self.logger.info(f"finished work for sensor {self.number}")
 
@@ -183,9 +176,9 @@ print(args.fps)
 
 riba = SensorCam(int(args.name),(int(args.width),int(args.height)))
 pivo = WindowImage(int(args.fps))
-kamen1 = SensorX(100)
-kamen2 = SensorX(10)
-kamen3 = SensorX(1)
+kamen1 = CringeX(100)
+kamen2 = CringeX(10)
+kamen3 = CringeX(1)
 while True:
     val1 = kamen1.get()
     val2 = kamen2.get()
