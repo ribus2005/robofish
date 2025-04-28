@@ -6,10 +6,10 @@ import cv2 as cv
 from ultralytics import YOLO
 
 class worker:
-    def __init__(self,model,input_queue,output_list):
+    def __init__(self,input_queue,output_list):
         self.input_queue = input_queue
         self.output_list = output_list
-        self.model = model
+        self.model = YOLO("yolov8s-pose.pt",verbose=False).to('cpu')
         self.process = mp.Process(target=self.run)
         self.process.start()
     def run(self):
@@ -39,10 +39,9 @@ def VideoToYolo(input, output=None, num_workers=1):
     fps = cap.get(cv.CAP_PROP_FPS)
     result = cv.VideoWriter(output, cv.VideoWriter_fourcc(*'MJPG'), fps, (frame_width,frame_height))
 
-    model = YOLO("yolov8s-pose.pt",verbose=False).to('cpu')
     workers = []
     for i in range(num_workers):
-        workers.append(worker(model,input_queue,output_list))
+        workers.append(worker(input_queue,output_list))
 
     while cap.isOpened():
         while not input_queue.full():
