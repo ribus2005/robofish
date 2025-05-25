@@ -1,0 +1,2 @@
+all:
+	pgc++ parallel6_mutlicore.cpp -acc=gpu -lboost_program_options -o gpuriba
