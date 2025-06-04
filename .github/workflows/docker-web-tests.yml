@@ -26,6 +26,10 @@ jobs:
         run: |
           docker tag candles ${{secrets.DOCKER_USERNAME}}/test-repo-app
           docker push ${{secrets.DOCKER_USERNAME}}/test-repo-app
+      - name: tag n push web
+        run: |
+          docker tag candle_nginx ${{secrets.DOCKER_USERNAME}}/test-repo-web
+          docker push ${{secrets.DOCKER_USERNAME}}/test-repo-web
 
       
         
