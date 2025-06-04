@@ -1,0 +1,17 @@
+services:
+  app:
+    platform: linux/amd64
+    build: 
+      context: .
+      dockerfile: ./Dockerfile.app
+  web:
+    platform: linux/amd64
+    build: 
+      context: .
+      dockerfile: ./Dockerfile.web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "50:80"
+    depends_on:
+      - app
