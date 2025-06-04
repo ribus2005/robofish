@@ -17,9 +17,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
       - name: build candles
-        run: docker build -f Dockerfile.app -t candles
+        run: docker build -f Dockerfile.app -t candles .
       - name: build candle_nginx
-        run: docker duild -f Dockerfile.web -t candle_nginx
+        run: docker duild -f Dockerfile.web -t candle_nginx .
       - name: container compose
         run: docker compose up --build
 
