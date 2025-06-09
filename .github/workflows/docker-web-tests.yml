@@ -6,6 +6,8 @@ on:
     branches: [ "helm/test-repo-chart" ]
 jobs:
   run-test:
+    permissions:
+      contents: write
     environment: DOCKER
     runs-on: ubuntu-latest
     steps:
