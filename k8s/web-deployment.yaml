@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+    name: web
+spec:
+    template:
+        spec:
+            containers:
+                - name: test-repo-web
+                  image: yariba228/test-repo-web 
+                  volumeMounts:
+                    - mountPath: /var/run/docker.sock:/var/run/docker.sock
+                      name: dock-sock
+                  ports:
+                    - containerPort: 80

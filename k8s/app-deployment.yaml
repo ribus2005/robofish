@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: app-pod
+spec:
+  containers:
+    - name: test-repo-app
+      image: yariba228/test-repo-app

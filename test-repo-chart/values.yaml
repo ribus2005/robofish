@@ -1,0 +1,12 @@
+image:
+  app:
+    repository: yariba228/test-repo-app
+    pullPolicy: IfNotPresent
+  web:
+    repository: yariba228/test-repo-web
+    pullPolicy: IfNotPresent
+  
+service:
+  type: NodePort
+  port: 80
+  NodePort: 30000
