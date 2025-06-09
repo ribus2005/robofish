@@ -37,7 +37,7 @@ jobs:
       - name: helm package or the scary part
         run: |
           mkdir helm_package
-          helm package test-repo-chart helm_package
+          helm package test-repo-chart helm_package --version v1
           ls helm_package
         
 
