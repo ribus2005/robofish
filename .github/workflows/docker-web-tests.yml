@@ -47,9 +47,9 @@ jobs:
           body: |
             Helm chart release
             Includes:
-              -test-repo-app
-              -test-repo-web
-          files: helm_package
+            - test-repo-app
+            - test-repo-web
+          files: helm_package/*
 
       
         
