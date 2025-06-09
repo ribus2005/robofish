@@ -37,9 +37,18 @@ jobs:
       - name: helm package or the scary part
         run: |
           mkdir helm_package
-          helm package test-repo-chart --destination helm_package --version v1
+          helm package test-repo-chart --destination helm_package
           ls helm_package
-        
+      - name: publish
+        with:
+          tag_name: latest
+          name: Release
+          body: |
+            Helm chart release
+            Includes:
+              -test-repo-app
+              -test-repo-web
+          files: helm_package
 
       
         
