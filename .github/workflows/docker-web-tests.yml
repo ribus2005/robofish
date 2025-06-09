@@ -50,6 +50,8 @@ jobs:
             - test-repo-app
             - test-repo-web
           files: helm_package/*
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       
         
