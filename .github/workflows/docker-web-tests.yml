@@ -1,9 +1,9 @@
 name: Docker test
 on:
   push:
-    branches: [ "feature/docker-web-hub" ]
+    branches: [ "helm/test-repo-chart" ]
   pull_request:
-    branches: [ "feature/docker-web-hub" ]
+    branches: [ "helm/test-repo-chart" ]
 jobs:
   run-test:
     environment: DOCKER
@@ -30,6 +30,16 @@ jobs:
         run: |
           docker tag candle_nginx ${{secrets.DOCKER_USERNAME}}/test-repo-web
           docker push ${{secrets.DOCKER_USERNAME}}/test-repo-web
+      - name: get helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.17.3'
+
+      - name: tag version check
+        id: get-version
+        run: |
+          VERSION=$(helm/test-repo-chart/Chart.yaml)
+          echo "${VERSION}" >> $GITHUB_OUTPUT
 
       
         
